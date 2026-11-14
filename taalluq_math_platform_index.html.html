@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منصة التألق والإبداع في الرياضيات – الصف الثاني عشر عام</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0B5D4B;--ink:#10233F;--gold:#D9A441;--paper:#F4F7F5;--bad:#B3392F;--ok:#177A4B}
+body{font-family:'Tajawal',Tahoma,Arial,sans-serif;background:var(--paper);color:var(--ink)}
+.hero{background:linear-gradient(160deg,var(--ink),var(--teal));position:relative;overflow:hidden}
+.hero:after{content:"π";position:absolute;left:-2rem;bottom:-9rem;font-size:26rem;line-height:1;color:#fff;opacity:.06;font-weight:800}
+.btn{border-radius:.75rem;padding:.7rem 1.2rem;font-weight:700;transition:.15s}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.gold{background:var(--gold);color:var(--ink)}.gold:hover{filter:brightness(1.07)}
+.teal{background:var(--teal);color:#fff}.teal:hover{filter:brightness(1.15)}
+.opt{display:block;width:100%;text-align:start;border:2px solid #CBD5D1;background:#fff;border-radius:.75rem;padding:.7rem 1rem;font-weight:500}
+.opt:hover:not(:disabled){border-color:var(--teal);background:#EAF4F0}
+.opt.ok{border-color:var(--ok);background:#E3F4EA}.opt.no{border-color:var(--bad);background:#FBE9E7}
+.cell{width:14px;height:14px;border-radius:3px;background:#DDE3E0;display:inline-block;margin:1px}
+.modal{position:fixed;inset:0;background:#10233Fcc;display:flex;align-items:center;justify-content:center;z-index:50}
+@media print{.noprint{display:none!important}body{background:#fff}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal" class="modal hidden noprint"></div>
+<script>
+/* ================= البيانات: الدروس والأسئلة (عدّل هنا لإضافة أسئلة) ================= */
+const MODS=[
+{id:'A',en:'Quadratic Functions & Equations',ar:'الدوال والمعادلات التربيعية',L:[
+['L1','Characteristics of Quadratic Graphs','خواص تمثيلات الدوال التربيعية البيانية'],['L2','Graphing Quadratic Functions','تمثيل الدوال التربيعية بيانياً'],['L3','Solving Quadratics by Graphing','حل المعادلات التربيعية بيانياً'],['L4','Solving Quadratics by Factoring','حل المعادلات التربيعية بالتحليل'],['L5','Completing the Square','إكمال المربع'],['L6','The Quadratic Formula','القانون العام'],['L7','The Discriminant','المميز'],['L8','Quadratic Inequalities','المتباينات التربيعية']]},
+{id:'B',en:'Polynomial Functions',ar:'الدوال كثيرات الحدود',L:[
+['L9','Evaluating Polynomial Functions','إيجاد قيم الدوال كثيرة الحدود'],['L10','End Behavior & Power Functions','السلوك الطرفي ودوال القوة'],['L11','Graphs and Zeros of Polynomials','التمثيل البياني وأصفار كثيرات الحدود'],['L12','Relative Maxima and Minima','القيم العظمى والصغرى النسبية'],['L13','Long Division of Polynomials','القسمة المطولة'],['L14','Synthetic Division','القسمة التركيبية'],['L15','Solving Polynomial Equations by Factoring','حل معادلات كثيرات الحدود بالتحليل'],['L16','Adding, Subtracting & Multiplying Polynomials','جمع كثيرات الحدود وطرحها وضربها']]},
+{id:'C',en:'Exponential Functions',ar:'الدوال الأسية',L:[
+['L17','Graphing Exponential Growth','تمثيل دوال النمو الأسي'],['L18','Growth and Decay','النمو والتضاؤل'],['L19','Solving Exponential Equations','حل المعادلات الأسية']]},
+{id:'D',en:'Statistics & Normal Distribution',ar:'الإحصاء والتوزيع الطبيعي',L:[
+['L20','Types of Studies','أنواع الدراسات'],['L21','Biased Questions','الأسئلة المتحيزة'],['L22','The Empirical Rule','القاعدة التجريبية'],['L23','Normal Distribution Probabilities','احتمالات التوزيع الطبيعي']]}];
+const ALL=MODS.flatMap(m=>m.L.map(l=>({id:l[0],en:l[1],ar:l[2],m:m.id})));
+/* M اختيار من متعدد (الإجابة الصحيحة أول خيار ثم يُخلط) | T صح/خطأ | X مطابقة. الحقل img اختياري لرابط صورة */
+const M=(q,a,o,e,f,img)=>({t:'m',q:[q,a],o,e:[e,f],img});
+const T=(q,a,v,e,f,img)=>({t:'t',q:[q,a],v,e:[e,f],img});
+const X=(q,a,p,e,f,img)=>({t:'x',q:[q,a],p,e:[e,f],img});
+const Q={
+'L1':[M('Find the axis of symmetry of y = −2x²+8x−3.','أوجد محور التماثل للدالة y = −2x²+8x−3.',['x = 2','x = −2','x = 4','x = −4'],'x = −b/(2a) = −8/(−4) = 2.','x = −b/(2a) = −8/(−4) = 2.')],
+'L2':[M('Find the vertex of y = x²−6x+5.','أوجد رأس القطع المكافئ y = x²−6x+5.',['(3, −4)','(−3, −4)','(3, 4)','(6, 5)'],'x = 3, then y = 9−18+5 = −4.','x = 3 ثم y = 9−18+5 = −4.')],
+'L3':[M('The graph of y = x²−4 crosses the x-axis at −2 and 2. What are the solutions of x²−4 = 0?','يقطع منحنى y = x²−4 المحور x عند −2 و 2. ما حلول x²−4 = 0؟',['x = −2 , x = 2','x = 4','x = 0 , x = 4','No real solutions / لا حلول حقيقية'],'Solutions of the equation are the x-intercepts.','حلول المعادلة هي نقاط تقاطع المنحنى مع المحور x.')],
+'L4':[M('Solve x²−5x−14 = 0 by factoring.','حل المعادلة x²−5x−14 = 0 بالتحليل.',['x = 7 , x = −2','x = −7 , x = 2','x = 14 , x = −1','x = 5 , x = −14'],'(x−7)(x+2) = 0, so x = 7 or x = −2.','(x−7)(x+2) = 0 إذن x = 7 أو x = −2.')],
+'L5':[M('What value of c makes x²−7x+c a perfect square trinomial?','ما قيمة c التي تجعل x²−7x+c ثلاثي حدود مربعاً كاملاً؟',['49/4','−49/4','49','−7/2'],'c = (b/2)² = (7/2)² = 49/4.','c = (b/2)² = (7/2)² = 49/4.'),
+ M('Solve x²−12x+3 = 8 by completing the square.','حل x²−12x+3 = 8 بإكمال المربع.',['x = 6 ± √41','x = 6 ± √31','x = −6 ± √41','x = 12 ± √41'],'x²−12x = 5 → (x−6)² = 41 → x = 6 ± √41.','x²−12x = 5 ← (x−6)² = 41 ← x = 6 ± √41.')],
+'L6':[M('Solve 2x²+3x−2 = 0 using the Quadratic Formula.','حل 2x²+3x−2 = 0 بالقانون العام.',['x = 1/2 , x = −2','x = 2 , x = −1/2','x = 1 , x = −2','x = −1/2 , x = −2'],'x = (−3 ± √(9+16))/4 = (−3 ± 5)/4.','x = (−3 ± √(9+16))/4 = (−3 ± 5)/4.')],
+'L7':[M('Use the discriminant for x²+6x+9 = 0. How many real roots?','استخدم المميز للمعادلة x²+6x+9 = 0. كم عدد الجذور الحقيقية؟',['One (repeated) real root / جذر حقيقي واحد مكرر','Two real roots / جذران حقيقيان','No real roots / لا جذور حقيقية','Infinitely many / عدد لا نهائي'],'b²−4ac = 36−36 = 0.','b²−4ac = 36−36 = 0.')],
+'L8':[T('The graph of y ≥ x²+1 has a solid parabola with the region above it shaded.','تمثيل y ≥ x²+1 قطع مكافئ متصل مع تظليل المنطقة الأعلى منه.',true,'≥ gives a solid boundary; “greater than” shades above.','الرمز ≥ يعطي حداً متصلاً والتظليل لأعلى.'),
+ M('Solve x²−5x+6 < 0.','حل المتباينة x²−5x+6 < 0.',['2 < x < 3','x < 2 or x > 3','x < −3 or x > −2','−3 < x < −2'],'(x−2)(x−3) < 0 between the roots.','(x−2)(x−3) < 0 بين الجذرين.')],
+'L9':[M('If f(x) = x³−2x²+3, find f(2).','إذا كانت f(x) = x³−2x²+3 فأوجد f(2).',['3','11','−5','7'],'8−8+3 = 3.','8−8+3 = 3.')],
+'L10':[M('Describe the end behavior of f(x) = −3x⁴.','صف السلوك الطرفي للدالة f(x) = −3x⁴.',['f(x)→−∞ as x→−∞ and x→+∞','f(x)→+∞ as x→−∞ and x→+∞','f(x)→+∞ as x→−∞, f(x)→−∞ as x→+∞','f(x)→−∞ as x→−∞, f(x)→+∞ as x→+∞'],'Even degree with a negative leading coefficient: both ends down.','درجة زوجية ومعامل رئيسي سالب: الطرفان لأسفل.')],
+'L11':[M('f(−1) = 4 and f(0) = −1. Between which consecutive integers is a real zero?','f(−1) = 4 و f(0) = −1. بين أي عددين صحيحين متتاليين يوجد صفر حقيقي؟',['−1 and 0','0 and 1','−2 and −1','No zero / لا يوجد صفر'],'The sign changes from + to −.','تتغير الإشارة من + إلى −.')],
+'L12':[M('For f(x) = x³−3x, where are the relative maximum and minimum?','للدالة f(x) = x³−3x أين القيمة العظمى والصغرى النسبية؟',['Max near x = −1, min near x = 1','Max near x = 1, min near x = −1','Max near x = 0, min near x = 3','No relative extrema'],'f′(x) = 3x²−3 = 0 at x = ±1; the graph rises, falls, then rises.','f′(x) = 3x²−3 = 0 عند x = ±1 والمنحنى يصعد ثم يهبط ثم يصعد.')],
+'L13':[M('Divide (x³+2x²−x−2) by (x+2) using long division.','اقسم (x³+2x²−x−2) على (x+2) بالقسمة المطولة.',['x²−1','x²+1','x²−x','x²−2'],'x²(x+2) = x³+2x²; then −1(x+2) = −x−2. Remainder 0.','x²(x+2) = x³+2x² ثم −1(x+2) = −x−2 والباقي 0.')],
+'L14':[M('Use synthetic division: (x³−6x²+11x−6) ÷ (x−1).','استخدم القسمة التركيبية: (x³−6x²+11x−6) ÷ (x−1).',['x²−5x+6','x²+5x+6','x²−5x−6','x²−6x+5'],'Coefficients 1, −6, 11, −6 with 1 give 1, −5, 6, remainder 0.','المعاملات 1 و −6 و 11 و −6 مع 1 تعطي 1 و −5 و 6 والباقي 0.')],
+'L15':[M('Solve x³−4x = 0 by factoring.','حل x³−4x = 0 بالتحليل.',['x = 0 , 2 , −2','x = 2 , −2','x = 0 , 4','x = 4 , −4'],'x(x−2)(x+2) = 0.','x(x−2)(x+2) = 0.')],
+'L16':[M('Simplify (6x²−7x+8) + (−4x²+9x−5).','بسّط (6x²−7x+8) + (−4x²+9x−5).',['2x²+2x+3','10x²+2x+3','2x²−16x+13','2x²+2x−13'],'Combine like terms.','اجمع الحدود المتشابهة.')],
+'L17':[M('Which function shows exponential growth?','أي دالة تمثل نمواً أسياً؟',['y = 2(1.5)ˣ','y = 2(0.5)ˣ','y = 2x + 1','y = 2x²'],'Growth needs a base greater than 1.','النمو الأسي يتطلب أساساً أكبر من 1.')],
+'L18':[M('A car worth 20,000 AED loses 10% of its value each year. What is its value after 2 years?','سيارة قيمتها 20,000 درهم تفقد 10% من قيمتها كل سنة. ما قيمتها بعد سنتين؟',['16,200 AED','16,000 AED','18,000 AED','14,400 AED'],'20,000(0.9)² = 16,200.','20,000(0.9)² = 16,200.')],
+'L19':[M('Solve (1/5)^(x−5) = 25^(3x+2).','حل المعادلة (1/5)^(x−5) = 25^(3x+2).',['x = 1/7','x = 7','x = −1/7','x = 5/7'],'5^(−x+5) = 5^(6x+4) → −x+5 = 6x+4 → x = 1/7.','5^(−x+5) = 5^(6x+4) ← −x+5 = 6x+4 ← x = 1/7.')],
+'L20':[M('A teacher randomly assigns half the class to a new method and compares scores. This is a(n)…','يوزع معلم نصف الصف عشوائياً على طريقة جديدة ويقارن الدرجات. هذه…',['Experiment / تجربة','Survey / دراسة مسحية','Observational study / دراسة رصدية','Poll / استطلاع'],'Treatments are assigned by the researcher.','المعالجات يحددها الباحث.')],
+'L21':[M('Which survey question is biased?','أي سؤال استطلاع متحيز؟',['Don’t you agree the cafeteria food is awful? / ألا توافق أن طعام المقصف سيئ؟','How often do you buy lunch? / كم مرة تشتري الغداء؟','Which sport do you prefer? / ما الرياضة التي تفضلها؟','How many hours do you sleep? / كم ساعة تنام؟'],'It pushes the answer toward one opinion.','يدفع الإجابة نحو رأي واحد.')],
+'L22':[M('Heights: normal, mean 168 cm, SD 6 cm. What percent are between 156 and 180 cm?','أطوال طبيعية متوسطها 168 سم وانحرافها 6 سم. ما نسبة من أطوالهم بين 156 و180 سم؟',['95%','68%','99.7%','81.5%'],'156 and 180 are within 2 SD of the mean.','القيمتان ضمن انحرافين معياريين من المتوسط.')],
+'L23':[M('μ = 81°, σ = 6°. Find P(X ≥ 95°) using z = 2.33 (area to the left = 0.9901).','μ = 81° و σ = 6°. أوجد P(X ≥ 95°) باستخدام z = 2.33 (المساحة يسار z = 0.9901).',['0.99%','99.01%','9.9%','2.33%'],'z = (95−81)/6 ≈ 2.33; 1 − 0.9901 = 0.0099.','z = (95−81)/6 ≈ 2.33 ثم 1 − 0.9901 = 0.0099.')]
+};
+const GOOD=['Champion! Keep going! • بطل! استمر','Excellent work! • أحسنت، عمل ممتاز!','Brilliant! • رائع، أنت متألق!','You are on fire! • مستواك مبهر!'];
+const BAD=['Good try — the next point is yours! • أحسنت المحاولة، حاول مرة أخرى في النقطة القادمة','Almost there, keep thinking! • اقتربت، واصل التفكير!','Mistakes help us learn! • الأخطاء طريقنا للتعلّم!'];
+/* ================= التخزين المحلي ================= */
+const KEY='taalluq_g12_results_v1';
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}};
+const put=r=>{const a=load();const i=a.findIndex(x=>x.n===r.n&&x.s===r.s&&x.l===r.l);
+ if(i<0)a.push(r);else if(r.sc>=a[i].sc)a[i]=r;localStorage.setItem(KEY,JSON.stringify(a))};
+const $=s=>document.querySelector(s);const R=h=>{$('#app').innerHTML=h;window.scrollTo(0,0)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+let U=null,S={};
+/* ================= الصفحة الرئيسية ================= */
+function home(){R(`
+<main class="hero text-white min-h-screen">
+ <div class="relative z-10 max-w-5xl mx-auto px-5 py-10 grid md:grid-cols-2 gap-10 items-center min-h-screen">
+  <section>
+   <p class="text-2xl font-extrabold" style="color:var(--gold)">مجمع زايد التعليمي بالرقايب</p>
+   <p class="text-sm opacity-80 mt-1">Zayed Educational Complex · Al Ruqayb, Ajman · UAE</p>
+   <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mt-8">منصة التألق والإبداع في الرياضيات</h1>
+   <p class="text-lg mt-3 opacity-90" dir="ltr" style="text-align:right">Excellence &amp; Creativity in Mathematics</p>
+   <p class="mt-6 font-bold">MATH · Grade 12 General · المراجعة النهائية</p>
+   <p class="mt-6">بإشراف الأستاذ أسامة البادي</p>
+   <p class="font-bold" dir="ltr" style="text-align:right">الأستاذ/ أسامة البادي</p>
+  </section>
+  <section class="bg-white text-[color:var(--ink)] rounded-2xl p-6 shadow-xl">
+   <h2 class="text-xl font-extrabold mb-4">دخول الطالب · Student Login</h2>
+   <label class="block font-medium mb-1" for="nm">اسم الطالب · Student name</label>
+   <input id="nm" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 mb-3" autocomplete="off">
+   <label class="block font-medium mb-1" for="sc">الشعبة · Section</label>
+   <input id="sc" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 mb-4" placeholder="10A" autocomplete="off">
+   <p id="err" class="text-sm mb-2" style="color:var(--bad)"></p>
+   <button class="btn gold w-full text-lg" onclick="login()">ابدأ الحل · Start</button>
+   <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t">
+    <button class="btn teal text-sm" onclick="askPass('teacher')">لوحة المعلم<br><span dir="ltr">Teacher</span></button>
+    <button class="btn teal text-sm" onclick="askPass('academic')">النائبة الأكاديمية<br>فاطمة البلوشي</button>
+   </div>
+  </section>
+ </div>
+</main>`)}
+function login(){const n=$('#nm').value.trim(),s=$('#sc').value.trim();
+ if(!n||!s){$('#err').textContent='أدخل الاسم والشعبة · Enter name and section';return}
+ U={n,s};lessons()}
+/* ================= قائمة الدروس ================= */
+function lessons(){const rs=load().filter(x=>x.n===U.n&&x.s===U.s);const done=new Set(rs.map(x=>x.l));
+ R(`<header class="hero text-white"><div class="relative z-10 max-w-5xl mx-auto px-5 py-6 flex flex-wrap items-center justify-between gap-3">
+  <div><p class="text-xl font-extrabold">أهلاً ${esc(U.n)} · ${esc(U.s)}</p><p class="text-sm opacity-80">أنجزت ${done.size} من ${ALL.length} درساً · ${done.size} of ${ALL.length} lessons done</p></div>
+  <button class="btn gold" onclick="U=null;home()">خروج · Exit</button></div></header>
+ <main class="max-w-5xl mx-auto px-5 py-6">${MODS.map(m=>`<h2 class="text-xl font-extrabold mt-6 mb-3" style="color:var(--teal)">${m.ar} <span dir="ltr" class="text-base font-medium opacity-70">/ ${m.en}</span></h2>
+ <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${m.L.map(l=>{const r=rs.find(x=>x.l===l[0]);const has=(Q[l[0]]||[]).length;
+  return `<button class="opt" ${has?`onclick="start('${l[0]}')"`:'disabled style="opacity:.5"'}>
+  <span class="font-extrabold" dir="ltr">${l[0]}</span> <span dir="ltr" class="block text-sm">${l[1]}</span><span class="block text-sm">${l[2]}</span>
+  <span class="block mt-1 text-sm font-bold" style="color:${r?'var(--ok)':'#6B7A75'}">${r?`الدرجة · Score: ${r.sc}/${r.t}`:(has?'لم يُحل بعد · Not started':'قريباً · Coming soon')}</span></button>`}).join('')}</div>`).join('')}</main>`)}
+/* ================= الاختبار ================= */
+function start(id){const L=ALL.find(x=>x.id===id);S={id,L,qs:Q[id],i:0,sc:0};ask()}
+function ask(){const q=S.qs[S.i],L=S.L;S.done=false;
+ let body='';
+ if(q.t==='m'){S.opts=shuf(q.o.map((o,k)=>[o,k===0]));body=S.opts.map((o,k)=>`<button class="opt" onclick="pickM(${k})" dir="auto">${esc(o[0])}</button>`).join('')}
+ else if(q.t==='t'){body=['True · صح','False · خطأ'].map((o,k)=>`<button class="opt" onclick="pickT(${k})">${o}</button>`).join('')}
+ else{S.rs=shuf(q.p.map(p=>p[1]));body=q.p.map((p,k)=>`<div class="flex flex-wrap items-center gap-2 mb-2"><b dir="ltr" class="min-w-[7rem]">${esc(p[0])}</b>
+  <select class="border-2 border-gray-300 rounded-lg px-2 py-2 grow" id="s${k}" dir="ltr"><option value="">— choose / اختر —</option>${S.rs.map(r=>`<option>${esc(r)}</option>`).join('')}</select></div>`).join('')+`<button class="btn teal mt-2" onclick="pickX()">تحقق · Check</button>`}
+ R(`<main class="max-w-4xl mx-auto px-5 py-6">
+ <div class="flex justify-between items-center mb-3"><button class="btn noprint" style="background:#E3E9E6" onclick="lessons()">← الدروس · Lessons</button>
+ <span class="font-bold">${S.i+1} / ${S.qs.length}</span></div>
+ <div class="h-2 rounded bg-gray-200 mb-4"><div class="h-2 rounded" style="width:${S.i/S.qs.length*100}%;background:var(--gold)"></div></div>
+ <p class="font-extrabold" style="color:var(--teal)"><span dir="ltr">${L.id} ${L.en}</span> · ${L.ar}</p>
+ <div class="bg-white rounded-2xl p-5 shadow mt-3 grid md:grid-cols-3 gap-5">
+  <figure class="md:col-span-1 order-last md:order-first">${q.img?`<img src="${esc(q.img)}" alt="Math figure" class="rounded-lg w-full">`:`<div class="border-2 border-dashed rounded-lg h-36 flex items-center justify-center text-sm text-center p-2" style="border-color:#B9C6C1;color:#6B7A75">مكان الصورة (الرياضيات المتكاملة)<br>Figure placeholder</div>`}</figure>
+  <div class="md:col-span-2"><p class="text-lg font-bold" dir="ltr" style="text-align:left">${esc(q.q[0])}</p><p class="text-lg font-bold mb-4">${esc(q.q[1])}</p>
+  <div class="space-y-2" id="body">${body}</div><div id="fb"></div></div></div></main>`)}
+function pickM(k){if(S.done)return;const q=S.qs[S.i],ok=S.opts[k][1];
+ document.querySelectorAll('#body .opt').forEach((b,j)=>{b.disabled=true;if(S.opts[j][1])b.classList.add('ok');else if(j===k)b.classList.add('no')});fin(ok)}
+function pickT(k){if(S.done)return;const q=S.qs[S.i],ok=(k===0)===q.v;
+ document.querySelectorAll('#body .opt').forEach((b,j)=>{b.disabled=true;if((j===0)===q.v)b.classList.add('ok');else if(j===k)b.classList.add('no')});fin(ok)}
+function pickX(){if(S.done)return;const q=S.qs[S.i];let ok=true;
+ q.p.forEach((p,k)=>{const s=$('#s'+k);if(s.value!==p[1])ok=false;s.disabled=true;s.style.borderColor=s.value===p[1]?'var(--ok)':'var(--bad)'});
+ $('#body .btn').remove();if(!ok)$('#body').insertAdjacentHTML('beforeend','<p class="font-bold" dir="ltr">✔ '+q.p.map(p=>esc(p[0])+' → '+esc(p[1])).join(' | ')+'</p>');fin(ok)}
+function fin(ok){S.done=true;const q=S.qs[S.i];if(ok)S.sc++;const last=S.i===S.qs.length-1;
+ $('#fb').innerHTML=`<div class="mt-4 rounded-xl p-4" style="background:${ok?'#E3F4EA':'#FBE9E7'}" role="status">
+ <p class="font-extrabold" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✔ صحيح · Correct':'✘ غير صحيح · Not correct'}</p>
+ <p class="mt-1" dir="ltr" style="text-align:left">${esc(q.e[0])}</p><p>${esc(q.e[1])}</p>
+ <p class="mt-2 font-bold">${esc(pick(ok?GOOD:BAD))}</p></div>
+ <button class="btn gold mt-4" onclick="${last?'finish()':'S.i++;ask()'}">${last?'إنهاء الدرس · Finish':'التالي · Next'}</button>`}
+function finish(){const t=S.qs.length,sc=S.sc,p=Math.round(sc/t*100);
+ put({n:U.n,s:U.s,l:S.id,sc,t,d:new Date().toLocaleString('en-GB')});
+ R(`<main class="max-w-xl mx-auto px-5 py-12 text-center"><div class="bg-white rounded-2xl p-8 shadow">
+ <p class="text-5xl font-extrabold" style="color:var(--teal)">${sc} / ${t}</p><p class="text-2xl font-bold mt-2">${p}%</p>
+ <p class="mt-4 text-lg font-bold">${p>=80?'مستوى متألق! Outstanding! 🏆':p>=50?'جيد، راجع النقاط الخاطئة وأعد المحاولة · Good, review and retry':'لا تيأس، أعد الدرس وستتحسن · Don\'t give up, retry!'}</p>
+ <p class="mt-1 text-sm opacity-70" dir="ltr">${S.id} ${esc(S.L.en)}</p>
+ <div class="flex gap-2 justify-center mt-6"><button class="btn teal" onclick="start('${S.id}')">إعادة · Retry</button><button class="btn gold" onclick="lessons()">الدروس · Lessons</button></div></div></main>`)}
+/* ================= كلمة السر ولوحة التحكم ================= */
+function askPass(role){const m=$('#modal');m.classList.remove('hidden');
+ m.innerHTML=`<div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm" role="dialog"><h2 class="font-extrabold text-lg mb-3">${role==='teacher'?'دخول المعلم · Teacher':'دخول النائبة الأكاديمية فاطمة البلوشي'}</h2>
+ <label for="pw" class="block mb-1">كلمة السر · Password</label><input id="pw" type="password" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" onkeydown="if(event.key==='Enter')chk('${role}')">
+ <p id="pe" class="text-sm mt-2" style="color:var(--bad)"></p>
+ <div class="flex gap-2 mt-3"><button class="btn gold grow" onclick="chk('${role}')">دخول · Enter</button><button class="btn" style="background:#E3E9E6" onclick="$('#modal').classList.add('hidden')">إلغاء</button></div></div>`;$('#pw').focus()}
+function chk(role){if($('#pw').value==='0099'){$('#modal').classList.add('hidden');dash(role)}else $('#pe').textContent='كلمة السر خاطئة · Wrong password'}
+function dash(role){const rs=load();const g={};rs.forEach(r=>{const k=r.n+'|'+r.s;(g[k]=g[k]||{n:r.n,s:r.s,r:[]}).r.push(r)});
+ const st=Object.values(g).sort((a,b)=>a.s.localeCompare(b.s)||a.n.localeCompare(b.n));
+ const all=rs.length?Math.round(rs.reduce((a,r)=>a+r.sc/r.t,0)/rs.length*100):0;
+ R(`<header class="hero text-white"><div class="relative z-10 max-w-6xl mx-auto px-5 py-6 flex flex-wrap justify-between items-center gap-3">
+ <div><h1 class="text-2xl font-extrabold">${role==='teacher'?'لوحة تحكم المعلم · الأستاذ أسامة البادي':'تقارير النائبة الأكاديمية · فاطمة البلوشي'}</h1>
+ <p class="text-sm opacity-80">منصة التألق والإبداع في الرياضيات · مجمع زايد التعليمي بالرقايب</p></div>
+ <div class="flex gap-2 noprint"><button class="btn gold" onclick="window.print()">طباعة · Print</button>
+ ${role==='teacher'?`<button class="btn" style="background:var(--bad);color:#fff" onclick="wipe()">تصفير النتائج · Reset</button>`:''}
+ <button class="btn teal" style="border:1px solid #fff" onclick="home()">خروج · Exit</button></div></div></header>
+ <main class="max-w-6xl mx-auto px-5 py-6"><p class="font-bold mb-3">عدد الطلاب · Students: ${st.length} — متوسط الأداء · Average: ${all}%</p>
+ <div class="overflow-x-auto bg-white rounded-xl shadow"><table class="w-full text-sm"><thead style="background:var(--ink);color:#fff"><tr>
+ <th class="p-2 text-start">الطالب · Student</th><th class="p-2">الشعبة</th><th class="p-2">الدروس · Lessons</th><th class="p-2">المتوسط · Avg</th><th class="p-2 text-start">التقدم في الدروس (${ALL.length}) · Progress</th></tr></thead><tbody>
+ ${st.length?st.map(x=>{const avg=Math.round(x.r.reduce((a,r)=>a+r.sc/r.t,0)/x.r.length*100);
+ return `<tr class="border-t"><td class="p-2 font-bold">${esc(x.n)}</td><td class="p-2 text-center">${esc(x.s)}</td><td class="p-2 text-center">${x.r.length}/${ALL.length}</td><td class="p-2 text-center font-bold">${avg}%</td>
+ <td class="p-2" dir="ltr">${ALL.map(l=>{const r=x.r.find(z=>z.l===l.id);const c=!r?'':(r.sc/r.t>=.8?'#177A4B':r.sc/r.t>=.5?'#D9A441':'#B3392F');
+ return `<span class="cell" style="${c?'background:'+c:''}" title="${l.id} ${r?r.sc+'/'+r.t:'—'}"></span>`}).join('')}</td></tr>`}).join(''):'<tr><td colspan="5" class="p-6 text-center">لا توجد نتائج بعد · No results yet</td></tr>'}
+ </tbody></table></div>
+ <p class="text-sm mt-3" dir="ltr">Legend: <span class="cell" style="background:#177A4B"></span> ≥80% <span class="cell" style="background:#D9A441"></span> 50–79% <span class="cell" style="background:#B3392F"></span> &lt;50% <span class="cell"></span> not started</p>
+ <h2 class="font-extrabold text-lg mt-6 mb-2">سجل الدرجات · Score log</h2><div class="overflow-x-auto bg-white rounded-xl shadow"><table class="w-full text-sm"><tbody>
+ ${rs.slice().reverse().map(r=>`<tr class="border-t"><td class="p-2">${esc(r.n)} (${esc(r.s)})</td><td class="p-2" dir="ltr">${r.l}</td><td class="p-2 font-bold">${r.sc}/${r.t}</td><td class="p-2" dir="ltr">${esc(r.d)}</td></tr>`).join('')}</tbody></table></div></main>`)}
+function wipe(){if(confirm('سيتم حذف جميع النتائج نهائياً. هل أنت متأكد؟\nAll results will be deleted. Are you sure?')){localStorage.removeItem(KEY);dash('teacher')}}
+home();
+</script>
+</body>
+</html>
